@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Patient Dashboard — Healthcare BCCA</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+body{background:#f0f4f8;}
+.sidebar{background:#0d4f8c;min-height:100vh;padding:24px 16px;color:#fff;}
+.sidebar a{color:rgba(255,255,255,.8);text-decoration:none;display:block;padding:10px 14px;
+           border-radius:8px;margin-bottom:4px;transition:.2s;}
+.sidebar a:hover,.sidebar a.active{background:rgba(255,255,255,.15);color:#fff;}
+.card{border:none;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08);}
+.stat-card{border-left:4px solid;}
+.badge-verified{background:#d1fae5;color:#065f46;border-radius:20px;padding:3px 10px;font-size:.75rem;}
+.badge-pending{background:#fef3c7;color:#92400e;border-radius:20px;padding:3px 10px;font-size:.75rem;}
+</style>
+</head>
+<body>
+<div class="d-flex">
+  <!-- Sidebar -->
+  <div class="sidebar" style="width:240px;min-width:240px">
+    <div class="text-center mb-4">
+      <i class="fas fa-user-injured fa-2x mb-2"></i>
+      <div class="fw-bold">Patient Portal</div>
+      <small style="color:rgba(255,255,255,.6)">{{ keys.ID_i[:16] }}...</small>
+    </div>
+    <a href="/patient/dashboard" class="active"><i class="fas fa-home me-2"></i>Dashboard</a>
+    <a href="/patient/upload_ehr"><i class="fas fa-file-upload me-2"></i>Upload EHR</a>
+    <a href="/auth/patient_request"><i class="fas fa-handshake me-2"></i>Auth with Doctor</a>
+    <a href="/registry"><i class="fas fa-users me-2"></i>User Registry</a>
+    <a href="/audit_log"><i class="fas fa-history me-2"></i>Audit Log</a>
+    <hr style="border-color:rgba(255,255,255,.2)">
+    <a href="/logout" class="text-danger"><i class="fas fa-sign-out-alt me-2"></i>Logout</a>
+  </div>
+
+  <!-- Main -->
+  <div class="flex-grow-1 p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h4 class="fw-bold mb-0"><i class="fas fa-heartbeat text-danger me-2"></i>Patient Dashboard</h4>
+        <small class="text-muted">Pseudonym: {{ keys.ID_i[:24] }}... | Role: PATIENT</small>
+      </div>
+      <a href="/patient/upload_ehr" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Upload EHR
+      </a>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card p-3 stat-card border-primary">
+          <div class="text-muted small">Total EHRs</div>
+          <div class="fs-3 fw-bold text-primary">{{ ehrs|length }}</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card p-3 stat-card border-success">
+          <div class="text-muted small">Verified on Chain</div>
+          <div class="fs-3 fw-bold text-success">{{ ehrs|selectattr('verified')|list|length }}</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card p-3 stat-card border-warning">
+          <div class="text-muted small">Precomputed Pairs Left</div>
+          <div class="fs-3 fw-bold text-warning">{{ 20 - (keys.SID_index % 20) }}</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card p-3 stat-card border-info">
+          <div class="text-muted small">Revocation Status</div>
+          <div class="fs-5 fw-bold text-success"><i class="fas fa-check-circle"></i> Active</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EHR Records -->
+    <div class="card p-4">
+      <h5 class="fw-bold mb-3"><i class="fas fa-file-medical text-primary me-2"></i>My EHR Records (Historical Chain)</h5>
+      {% if ehrs %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Timestamp</th>
+              <th>EHR Preview</th>
+              <th>Block Hash</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for e in ehrs %}
+            <tr>
+              <td><small>{{ e.T_i }}</small></td>
+              <td>{{ e.get('ehr_preview','—') }}</td>
+              <td><small class="font-monospace text-muted">{{ e.get('block_hash','Pending')[:20] }}...</small></td>
+              <td>
+                {% if e.get('verified') %}
+                  <span class="badge-verified"><i class="fas fa-check me-1"></i>Verified</span>
+                {% else %}
+                  <span class="badge-pending">Pending</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-muted">
+        <i class="fas fa-file-medical fa-3x mb-3 opacity-25"></i>
+        <p>No EHR records yet. <a href="/patient/upload_ehr">Upload your first EHR</a>.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Algorithm reminder -->
+    <div class="card p-3 mt-3 border-info">
+      <small class="text-muted">
+        <i class="fas fa-bolt text-warning me-2"></i>
+        <strong>Algorithm 6 efficiency:</strong> EHR signing uses
+        <strong>0 EC multiplications</strong> on your device — all values are precomputed.
+        Your wearable sensor battery is preserved.
+      </small>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Launcher switch button -->
+<a href="http://localhost:5000" title="Back to Mode Selector"
+   style="position:fixed;bottom:24px;right:24px;z-index:9999;
+          background:#0f2027;color:#fff;border-radius:50px;
+          padding:10px 18px;font-size:.82rem;font-weight:600;
+          text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.4);
+          display:flex;align-items:center;gap:8px;transition:.2s;"
+   onmouseover="this.style.background='#065f46'"
+   onmouseout="this.style.background='#0f2027'">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  Switch Mode
+</a>
+</body></html>

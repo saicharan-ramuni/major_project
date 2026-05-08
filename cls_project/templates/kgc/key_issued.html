@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Key Issued{% endblock %}
+{% block content %}
+<div class="card border-warning shadow">
+  <div class="card-header bg-warning text-dark">
+    <h5 class="mb-0"><i class="bi bi-exclamation-triangle-fill"></i> Private Key — Show Once Only</h5>
+  </div>
+  <div class="card-body">
+    <div class="alert alert-danger"><strong>Copy and securely deliver these values to {{ user.username }}. They will not be shown again.</strong></div>
+    <table class="table table-sm table-bordered">
+      <tr><th>User</th><td>{{ user.username }} ({{ user.role }})</td></tr>
+      <tr><th>Secret value x</th><td><code class="small text-break">{{ SK_x }}</code></td></tr>
+      <tr><th>Partial key d</th><td><code class="small text-break">{{ SK_d }}</code></td></tr>
+      <tr><th>Partial key R</th><td><code class="small text-break">{{ SK_R }}</code></td></tr>
+      <tr><th>Public key PK</th><td><code class="small text-break">{{ PK_hex }}</code></td></tr>
+      <tr><th>Public key R</th><td><code class="small text-break">{{ R_hex }}</code></td></tr>
+    </table>
+    <a href="{{ url_for('kgc.users') }}" class="btn btn-secondary">Back to Users</a>
+  </div>
+</div>
+{% endblock %}

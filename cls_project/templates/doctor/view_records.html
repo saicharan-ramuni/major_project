@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Patient Records — {{ rid[:16] }}…{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3><i class="bi bi-file-earmark-medical text-success"></i> Records for RID</h3>
+  <a href="{{ url_for('doctor.records_search') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<div class="alert alert-secondary small mb-4">
+  <strong>Pseudonym (RID):</strong> <code>{{ rid }}</code><br>
+  <i class="bi bi-info-circle"></i> Real identity is hidden. Only the KGC can trace this RID.
+</div>
+
+{% if verified_records %}
+<table class="table table-hover table-bordered align-middle">
+  <thead class="table-success">
+    <tr>
+      <th>Record ID</th>
+      <th>File</th>
+      <th>Data Type</th>
+      <th>Signed At</th>
+      <th>CLS Signature Valid?</th>
+      <th>Hospitals</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in verified_records %}
+    {% set rec = item.record %}
+    {% set valid = item.valid %}
+    <tr>
+      <td>{{ rec.id }}</td>
+      <td><i class="bi bi-file-earmark"></i> {{ rec.filename or '—' }}</td>
+      <td><span class="badge bg-secondary">{{ rec.data_type }}</span></td>
+      <td class="small">{{ rec.signed_at.strftime('%Y-%m-%d %H:%M') }}</td>
+      <td>
+        {% if valid %}
+          <span class="badge bg-success fs-6"><i class="bi bi-check-circle-fill"></i> Valid Signature</span>
+        {% else %}
+          <span class="badge bg-danger fs-6"><i class="bi bi-x-circle-fill"></i> Invalid Signature</span>
+        {% endif %}
+      </td>
+      <td class="small">{{ rec.hospitals_shared or '—' }}</td>
+      <td>
+        {% if valid %}
+          <a href="{{ url_for('doctor.download_record', record_id=rec.id) }}"
+             class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-download"></i> Download
+          </a>
+        {% else %}
+          <span class="text-muted small">—</span>
+        {% endif %}
+      </td>
+    </tr>
+    <tr class="table-light">
+      <td colspan="7">
+        <div class="small text-muted">
+          <strong>σ·P = T + h₃·(R + H₁(P_pub,ID,R)·P_pub + h₂·PK) + h₄·PK</strong> &nbsp;|&nbsp;
+          T: <code>{{ rec.T_hex[:24] }}…</code> &nbsp;|&nbsp;
+          σ: <code>{{ rec.sigma[:20] }}…</code>
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="alert alert-info">No records found for this pseudonym, or pseudonym is expired/revoked.</div>
+{% endif %}
+{% endblock %}

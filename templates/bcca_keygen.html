@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Key Generation — Healthcare BCCA</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>body{background:#f0f4f8;} .card{border:none;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.1);}
+.step-badge{background:#e8f0fe;color:#1a6fc4;border-radius:50%;width:28px;height:28px;
+  display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;}</style>
+</head>
+<body>
+<nav class="navbar navbar-dark" style="background:#0d4f8c">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/"><i class="fas fa-heartbeat me-2"></i>Healthcare BCCA</a>
+    <a href="/" class="btn btn-outline-light btn-sm">Home</a>
+  </div>
+</nav>
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card p-5">
+        <h3 class="fw-bold mb-1"><i class="fas fa-key text-warning me-2"></i>Algorithm 4: Key Generation</h3>
+        <p class="text-muted mb-4">Enter the partial key material received from the Hospital Admin (HA).</p>
+
+        {% if error %}
+        <div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>{{ error }}</div>
+        {% endif %}
+
+        {% if auto_partial %}
+        <div class="alert alert-success d-flex align-items-center gap-2 mb-4">
+          <i class="fas fa-magic fa-lg"></i>
+          <div><strong>Auto-filled!</strong> HA has processed your registration. All fields are pre-filled — just click Generate.</div>
+        </div>
+        {% endif %}
+
+        <div class="alert alert-info small mb-4">
+          <span class="step-badge me-2">4.1</span> Verify psk_i · G == gpk_i + h₁_i · P_pub<br>
+          <span class="step-badge me-2 mt-2">4.2</span> Precompute SID/KID sets (n=20 pairs)<br>
+          <span class="step-badge me-2 mt-2">4.3</span> Precompute encryption sets Q/ek for EHR upload
+        </div>
+
+        <form method="POST">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-bold">Pseudonym ID (ID_i)</label>
+              <input type="text" class="form-control font-monospace" name="id_i" required
+                     value="{{ auto_partial.ID_i if auto_partial else '' }}"
+                     placeholder="Hex-encoded pseudonym from HA">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-bold">Partial Public Key gpk_i (hex ECPoint)</label>
+              <input type="text" class="form-control font-monospace" name="gpk_i" required
+                     value="{{ auto_partial.gpk_i if auto_partial else '' }}"
+                     placeholder="04...">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-bold">Partial Private Key psk_i (decimal)</label>
+              <input type="text" class="form-control font-monospace" name="psk_i" required
+                     value="{{ auto_partial.psk_i if auto_partial else '' }}"
+                     placeholder="Large integer">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-bold">E_i = d_i · G (hex ECPoint)</label>
+              <input type="text" class="form-control font-monospace" name="e_i" required
+                     value="{{ auto_partial.E_i if auto_partial else '' }}"
+                     placeholder="04...">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">A_i (decimal)</label>
+              <input type="text" class="form-control font-monospace" name="a_i" required
+                     value="{{ auto_partial.A_i if auto_partial else '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">B_i (decimal)</label>
+              <input type="text" class="form-control font-monospace" name="b_i" required
+                     value="{{ auto_partial.B_i if auto_partial else '' }}">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-bold">h₁_i (decimal)</label>
+              <input type="text" class="form-control font-monospace" name="h1_i" required
+                     value="{{ auto_partial.h1_i if auto_partial else '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Role</label>
+              <select class="form-select" name="role" id="roleSelect">
+                <option value="PATIENT" {% if auto_partial and auto_partial.role == 'PATIENT' %}selected{% endif %}>Patient</option>
+                <option value="DOCTOR"  {% if auto_partial and auto_partial.role == 'DOCTOR'  %}selected{% endif %}>Doctor</option>
+              </select>
+            </div>
+            <div class="col-md-6" id="yField"
+                 style="display:{% if auto_partial and auto_partial.role == 'DOCTOR' %}block{% else %}none{% endif %}">
+              <label class="form-label fw-bold">Doctor Decrypt Key y (if DOCTOR)</label>
+              <input type="text" class="form-control font-monospace" name="y"
+                     value="{{ auto_partial.y if auto_partial and auto_partial.y else '' }}"
+                     placeholder="Decimal scalar y">
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-warning w-100 py-2 fw-bold mt-4">
+            <i class="fas fa-cogs me-2"></i>Generate Full Keys + Precomputed Sets
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.getElementById('roleSelect').addEventListener('change', function() {
+  document.getElementById('yField').style.display = this.value === 'DOCTOR' ? 'block' : 'none';
+});
+</script>
+
+<!-- Launcher switch button -->
+<a href="http://localhost:5000" title="Back to Mode Selector"
+   style="position:fixed;bottom:24px;right:24px;z-index:9999;
+          background:#0f2027;color:#fff;border-radius:50px;
+          padding:10px 18px;font-size:.82rem;font-weight:600;
+          text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.4);
+          display:flex;align-items:center;gap:8px;transition:.2s;"
+   onmouseover="this.style.background='#065f46'"
+   onmouseout="this.style.background='#0f2027'">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  Switch Mode
+</a>
+</body></html>

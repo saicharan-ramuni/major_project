@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}My Health Records{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3><i class="bi bi-file-earmark-medical text-primary"></i> My Health Records</h3>
+  <a href="{{ url_for('patient.upload_health_record') }}" class="btn btn-primary"><i class="bi bi-upload"></i> Upload New</a>
+</div>
+
+{% if records %}
+<table class="table table-hover table-bordered align-middle">
+  <thead class="table-primary">
+    <tr><th>ID</th><th>File</th><th>Type</th><th>RID (Pseudonym)</th><th>Signed At</th><th>Sig Valid?</th><th>Hospitals</th></tr>
+  </thead>
+  <tbody>
+    {% for rec, valid in records %}
+    <tr>
+      <td>{{ rec.id }}</td>
+      <td><i class="bi bi-file-earmark"></i> {{ rec.filename or '—' }}</td>
+      <td><span class="badge bg-secondary">{{ rec.data_type }}</span></td>
+      <td><code class="small">{{ rec.RID[:16] }}…</code></td>
+      <td class="small">{{ rec.signed_at.strftime('%Y-%m-%d %H:%M') }}</td>
+      <td>
+        {% if valid %}
+          <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Valid</span>
+        {% else %}
+          <span class="badge bg-danger"><i class="bi bi-x-circle-fill"></i> Invalid</span>
+        {% endif %}
+      </td>
+      <td class="small">{{ rec.hospitals_shared or '—' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="alert alert-light text-center py-5">
+  <i class="bi bi-file-earmark-x fs-1 text-muted d-block mb-2"></i>
+  No health records yet. <a href="{{ url_for('patient.upload_health_record') }}">Upload your first record.</a>
+</div>
+{% endif %}
+{% endblock %}

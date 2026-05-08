@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Upload Health Record{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="card shadow border-primary">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-upload"></i> Upload &amp; CLS-Sign Health Record</h5>
+      </div>
+      <div class="card-body p-4">
+        <div class="alert alert-info small">
+          Your file will be <strong>AES-256-GCM encrypted</strong> and the record will be <strong>CLS-signed</strong> using your current pseudonym (RID).
+          The signature proves authenticity without revealing your real identity.
+        </div>
+        <form method="POST" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label class="form-label fw-bold">Health Record File</label>
+            <input type="file" name="file" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Data Type</label>
+            <select name="data_type" class="form-select">
+              <option value="general">General</option>
+              <option value="lab_result">Lab Result</option>
+              <option value="prescription">Prescription</option>
+              <option value="imaging">Imaging (X-Ray/MRI)</option>
+              <option value="cardiology">Cardiology</option>
+              <option value="radiology">Radiology</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Share with Hospitals (optional)</label>
+            <input type="text" name="hospitals" class="form-control" placeholder="e.g. City Hospital, Apollo">
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-pen-fill"></i> Encrypt &amp; Sign Record
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

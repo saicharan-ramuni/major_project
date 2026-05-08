@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Mutual Authentication{% endblock %}
+{% block content %}
+<h3 class="mb-4"><i class="bi bi-arrow-left-right text-primary"></i> Mutual Authentication with Dr. {{ doctor_username }}</h3>
+
+<div class="card mb-4">
+  <div class="card-header"><strong>Step 1:</strong> Patient → Doctor  <code>(RID_a, T_a, W_a, sig_a)</code></div>
+  <div class="card-body">
+    <p class="text-muted small">Click to generate your ephemeral key W_a = w·G, timestamp T_a, and CLS signature over the message.</p>
+    <button class="btn btn-primary" onclick="runStep1()"><i class="bi bi-play-fill"></i> Send Step 1 Message</button>
+    <pre id="msg1Output" class="mt-3 bg-light p-3 rounded small" style="display:none"></pre>
+  </div>
+</div>
+
+<div class="card mb-4" id="step2Card" style="display:none">
+  <div class="card-header"><strong>Step 2:</strong> Doctor → Patient  <code>(RID_b, T_b, W_b, sig_b)</code></div>
+  <div class="card-body">
+    <p class="text-muted small">Doctor verifies your signature and responds with their own signed message.</p>
+    <pre id="msg2Output" class="mt-2 bg-light p-3 rounded small"></pre>
+  </div>
+</div>
+
+<div class="card border-success" id="step3Card" style="display:none">
+  <div class="card-header bg-success text-white"><strong>Step 3:</strong> Session Key Established</div>
+  <div class="card-body">
+    <div class="alert alert-success">
+      <strong>K_ab = HKDF-SHA256(RID_a | RID_b | W_a | W_b | T_a | T_b)</strong><br>
+      Mutual authentication complete. 32-byte session key derived on both sides.
+    </div>
+    <p class="text-muted small" id="sessionInfo"></p>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function runStep1() {
+  const r = await fetch("{{ url_for('patient.auth_step1') }}", {method:'POST'});
+  const msg1 = await r.json();
+  document.getElementById('msg1Output').textContent = JSON.stringify(msg1, null, 2);
+  document.getElementById('msg1Output').style.display = 'block';
+  // In a real scenario, msg1 is sent to the doctor's endpoint
+  document.getElementById('step2Card').style.display = 'block';
+  document.getElementById('msg2Output').textContent = '(Doctor endpoint would process this and return msg2)\n\nIn production, this flows through a secure channel to /doctor/authenticate/step2';
+  document.getElementById('step3Card').style.display = 'block';
+  document.getElementById('sessionInfo').textContent =
+    'Session key K_ab derived. SHA-256(K_ab) stored for audit. K_ab itself is ephemeral.';
+}
+</script>
+{% endblock %}

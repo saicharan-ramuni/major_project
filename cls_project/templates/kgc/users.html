@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}KGC — Manage Users{% endblock %}
+{% block content %}
+<h3 class="mb-4"><i class="bi bi-people-fill"></i> Manage Users &amp; Issue Keys</h3>
+
+<h5 class="text-primary">Patients</h5>
+<table class="table table-hover table-bordered mb-4">
+  <thead class="table-primary"><tr><th>ID</th><th>Username</th><th>Email</th><th>Registered</th><th>Has Key?</th><th>Action</th></tr></thead>
+  <tbody>
+    {% for u in patients %}
+    <tr>
+      <td>{{ u.id }}</td>
+      <td>{{ u.username }}</td>
+      <td>{{ u.email or '—' }}</td>
+      <td>{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+      <td>{% if u.cls_key %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</td>
+      <td>
+        <form method="POST" action="{{ url_for('kgc.issue_key', user_id=u.id) }}" style="display:inline">
+          <button class="btn btn-sm btn-outline-primary">Re-issue Key</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="text-center text-muted">No patients registered yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h5 class="text-success">Doctors</h5>
+<table class="table table-hover table-bordered">
+  <thead class="table-success"><tr><th>ID</th><th>Username</th><th>Email</th><th>Registered</th><th>Has Key?</th><th>Action</th></tr></thead>
+  <tbody>
+    {% for u in doctors %}
+    <tr>
+      <td>{{ u.id }}</td>
+      <td>{{ u.username }}</td>
+      <td>{{ u.email or '—' }}</td>
+      <td>{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+      <td>{% if u.cls_key %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</td>
+      <td>
+        <form method="POST" action="{{ url_for('kgc.issue_key', user_id=u.id) }}" style="display:inline">
+          <button class="btn btn-sm btn-outline-success">Re-issue Key</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="text-center text-muted">No doctors registered yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

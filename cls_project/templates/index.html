@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}CLS Healthcare IIoT — Home{% endblock %}
+{% block content %}
+<div class="text-center mb-5">
+  <h1 class="display-5 fw-bold text-primary"><i class="bi bi-shield-lock-fill"></i> CLS Healthcare IIoT</h1>
+  <p class="lead text-muted">Provably Secure Certificateless Signature Scheme with Anonymity</p>
+</div>
+
+<div class="row g-4 justify-content-center">
+  <!-- Patient -->
+  <div class="col-md-4">
+    <div class="card h-100 border-primary shadow-sm">
+      <div class="card-body text-center p-4">
+        <div class="display-4 text-primary mb-3"><i class="bi bi-person-fill"></i></div>
+        <h4 class="card-title">Patient Portal</h4>
+        <p class="card-text text-muted">Register, upload signed health records, manage your anonymous pseudonym, and authenticate with doctors.</p>
+        <a href="{{ url_for('patient.login') }}" class="btn btn-primary me-2">Login</a>
+        <a href="{{ url_for('patient.register') }}" class="btn btn-outline-primary">Register</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Doctor -->
+  <div class="col-md-4">
+    <div class="card h-100 border-success shadow-sm">
+      <div class="card-body text-center p-4">
+        <div class="display-4 text-success mb-3"><i class="bi bi-person-badge-fill"></i></div>
+        <h4 class="card-title">Doctor Portal</h4>
+        <p class="card-text text-muted">View and verify patient records with CLS signature validation, batch verify IoT telemetry, and run mutual authentication.</p>
+        <a href="{{ url_for('doctor.login') }}" class="btn btn-success me-2">Login</a>
+        <a href="{{ url_for('doctor.register') }}" class="btn btn-outline-success">Register</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- KGC -->
+  <div class="col-md-4">
+    <div class="card h-100 border-danger shadow-sm">
+      <div class="card-body text-center p-4">
+        <div class="display-4 text-danger mb-3"><i class="bi bi-gear-fill"></i></div>
+        <h4 class="card-title">KGC Admin</h4>
+        <p class="card-text text-muted">Key Generation Center — issue partial private keys, trace pseudonym identities, manage revocations, and view audit logs.</p>
+        <a href="{{ url_for('kgc.login') }}" class="btn btn-danger me-2">Login</a>
+        <a href="{{ url_for('kgc.setup') }}" class="btn btn-outline-danger">Setup</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

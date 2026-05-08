@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Patient Dashboard{% endblock %}
+{% block content %}
+<h2 class="mb-1"><i class="bi bi-person-fill text-primary"></i> Welcome, {{ username }}</h2>
+<p class="text-muted mb-4">Your health records are CLS-signed under your anonymous pseudonym.</p>
+
+<!-- Pseudonym Card -->
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card border-info h-100">
+      <div class="card-header bg-info text-white"><i class="bi bi-incognito"></i> Current Pseudonym (RID)</div>
+      <div class="card-body">
+        {% if rid %}
+          <code class="fs-6 text-break">{{ rid }}</code>
+          {% if rid_info %}
+            <div class="mt-2 small text-muted">
+              Expires: {{ rid_info.validity_expiry | int | string }} (Unix)
+              {% if rid_info.revoked %}<span class="badge bg-danger ms-2">REVOKED</span>{% endif %}
+            </div>
+          {% endif %}
+          <div class="mt-3">
+            <form method="POST" action="{{ url_for('patient.rotate_pseudonym') }}" class="d-inline">
+              <button class="btn btn-sm btn-outline-info">Rotate Pseudonym</button>
+            </form>
+          </div>
+        {% else %}
+          <span class="text-danger">No active pseudonym. <a href="{{ url_for('patient.pseudonym') }}">Generate one</a>.</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card border-primary h-100">
+      <div class="card-header bg-primary text-white"><i class="bi bi-upload"></i> Quick Actions</div>
+      <div class="card-body d-flex flex-column gap-2">
+        <a href="{{ url_for('patient.upload_health_record') }}" class="btn btn-primary"><i class="bi bi-upload"></i> Upload & Sign Health Record</a>
+        <a href="{{ url_for('patient.health_records') }}" class="btn btn-outline-primary"><i class="bi bi-file-earmark-medical"></i> View My Records</a>
+        <a href="{{ url_for('patient.pseudonym') }}" class="btn btn-outline-info"><i class="bi bi-incognito"></i> Manage Pseudonym</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Records -->
+<h5 class="mb-3"><i class="bi bi-clock-history"></i> Recent Records</h5>
+{% if records %}
+<table class="table table-hover table-bordered">
+  <thead class="table-primary"><tr><th>ID</th><th>Type</th><th>RID Used</th><th>Signed At</th><th>Sig Valid?</th></tr></thead>
+  <tbody>
+    {% for rec in records %}
+    <tr>
+      <td>{{ rec.id }}</td>
+      <td><span class="badge bg-secondary">{{ rec.data_type }}</span></td>
+      <td><code class="small">{{ rec.RID[:16] }}…</code></td>
+      <td class="small">{{ rec.signed_at.strftime('%Y-%m-%d %H:%M') }}</td>
+      <td><span class="badge bg-secondary">—</span></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="alert alert-light text-muted">No records yet. <a href="{{ url_for('patient.upload_health_record') }}">Upload your first record.</a></div>
+{% endif %}
+{% endblock %}

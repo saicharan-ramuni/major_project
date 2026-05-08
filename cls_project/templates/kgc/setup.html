@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}KGC Setup{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card shadow border-danger">
+      <div class="card-header bg-danger text-white text-center">
+        <h5 class="mb-0"><i class="bi bi-gear-fill"></i> Create KGC Admin Account</h5>
+      </div>
+      <div class="card-body p-4">
+        <div class="alert alert-warning small"><i class="bi bi-exclamation-triangle-fill"></i> This page is only accessible if no KGC admin exists yet.</div>
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label">Admin Username</label>
+            <input type="text" name="username" class="form-control" value="admin" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-danger w-100">Create KGC Admin</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

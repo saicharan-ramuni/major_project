@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Auth Sessions — KGC{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3><i class="bi bi-shield-lock-fill text-success"></i> Mutual Authentication Sessions</h3>
+  <a href="{{ url_for('kgc.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i> Back
+  </a>
+</div>
+
+<div class="alert alert-info small">
+  <i class="bi bi-info-circle"></i>
+  Each row is a completed 3-step mutual authentication between a patient and a doctor.
+  The <strong>session key hash</strong> is SHA-256(K_ab) — the real session key is never stored.
+  Matching hashes on both sides confirm both parties derived the same K_ab.
+</div>
+
+{% if session_rows %}
+<table class="table table-hover table-bordered align-middle small">
+  <thead class="table-dark">
+    <tr>
+      <th>#</th>
+      <th>Initiator (Patient)</th>
+      <th>Patient RID</th>
+      <th>Responder (Doctor)</th>
+      <th>Doctor RID</th>
+      <th>Session Key Hash (SHA-256)</th>
+      <th>Established At</th>
+      <th>Expires At</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in session_rows %}
+    {% set s = row.session %}
+    <tr>
+      <td>{{ s.id }}</td>
+      <td><span class="badge bg-primary">{{ row.initiator_name }}</span></td>
+      <td><code class="small">{{ row.initiator_rid[:16] }}…</code></td>
+      <td><span class="badge bg-success">{{ row.responder_name }}</span></td>
+      <td><code class="small">{{ row.responder_rid[:16] }}…</code></td>
+      <td>
+        <code class="text-break" style="font-size:0.7rem">{{ s.session_key_hash }}</code>
+      </td>
+      <td>{{ s.established_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+      <td>
+        {% if s.expires_at %}
+          {{ s.expires_at.strftime('%Y-%m-%d %H:%M') }}
+        {% else %}—{% endif %}
+      </td>
+    </tr>
+    <tr class="table-light">
+      <td colspan="8">
+        <div class="text-muted" style="font-size:0.72rem">
+          <strong>W_a:</strong> <code>{{ (s.W_a_hex or '')[:32] }}…</code> &nbsp;|&nbsp;
+          <strong>W_b:</strong> <code>{{ (s.W_b_hex or '')[:32] }}…</code> &nbsp;|&nbsp;
+          <strong>T_a:</strong> {{ s.T_a }} &nbsp;|&nbsp;
+          <strong>T_b:</strong> {{ s.T_b }}
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="alert alert-secondary">
+  No completed authentication sessions yet. Run the 3-step mutual auth protocol between a patient and a doctor to see entries here.
+</div>
+{% endif %}
+{% endblock %}

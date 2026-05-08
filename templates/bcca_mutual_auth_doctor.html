@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Doctor Auth Response — Healthcare BCCA</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>body{background:#f0f4f8;} .card{border:none;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.1);}
+.code-box{background:#1e1e2e;color:#cdd6f4;border-radius:8px;padding:12px;font-family:monospace;font-size:.75rem;word-break:break-all;max-height:180px;overflow:auto;}
+</style>
+</head>
+<body>
+<nav class="navbar navbar-dark" style="background:#065f46">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/doctor/dashboard"><i class="fas fa-stethoscope me-2"></i>Doctor Portal</a>
+    <a href="/doctor/dashboard" class="btn btn-outline-light btn-sm">Dashboard</a>
+  </div>
+</nav>
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card p-5">
+        <div class="text-center mb-4">
+          <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+          <h4 class="fw-bold">Patient Verified — Auth Response Sent</h4>
+          <p class="text-muted">Algorithm 8 Steps 2-3 complete. Patient role verified as PATIENT ✓</p>
+        </div>
+
+        <div class="alert alert-success mb-4">
+          <strong>Session Key K_ab established:</strong> <code>{{ session_key }}</code><br>
+          All subsequent EHR communication secured with AES-256-GCM.
+        </div>
+
+        <div class="mb-3">
+          <h6 class="fw-bold">Your Auth Response (Z_b, C_b, σ_b) — send to patient</h6>
+          <div class="code-box">{{ auth_resp | tojson(indent=2) }}</div>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm mb-4"
+                onclick="navigator.clipboard.writeText(document.querySelector('.code-box').innerText)">
+          <i class="fas fa-copy me-2"></i>Copy Response
+        </button>
+
+        <div class="alert alert-info small">
+          <i class="fas fa-info-circle me-2"></i>
+          W'_a = (x_b + psk_b) · KID^a_k — decrypted C_a, confirmed Role_a = PATIENT,
+          verified σ_a · G = gpk_a + h^a₁·P_pub + h^a₂·KID^a_k + h^a₃·upk_a ✓
+        </div>
+
+        <a href="/doctor/dashboard" class="btn btn-success w-100 fw-bold">
+          <i class="fas fa-file-medical me-2"></i>Access Patient EHR
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Launcher switch button -->
+<a href="http://localhost:5000" title="Back to Mode Selector"
+   style="position:fixed;bottom:24px;right:24px;z-index:9999;
+          background:#0f2027;color:#fff;border-radius:50px;
+          padding:10px 18px;font-size:.82rem;font-weight:600;
+          text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.4);
+          display:flex;align-items:center;gap:8px;transition:.2s;"
+   onmouseover="this.style.background='#065f46'"
+   onmouseout="this.style.background='#0f2027'">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  Switch Mode
+</a>
+</body></html>

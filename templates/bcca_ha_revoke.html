@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Revoke User — Healthcare BCCA</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+body{background:#f0f4f8;}
+.sidebar{background:#1e3a5f;min-height:100vh;padding:24px 16px;color:#fff;}
+.sidebar a{color:rgba(255,255,255,.8);text-decoration:none;display:block;padding:10px 14px;
+           border-radius:8px;margin-bottom:4px;transition:.2s;}
+.sidebar a:hover,.sidebar a.active{background:rgba(255,255,255,.15);color:#fff;}
+.card{border:none;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08);}
+.role-patient{background:#dbeafe;color:#1e40af;border-radius:20px;padding:2px 10px;font-size:.75rem;}
+.role-doctor{background:#d1fae5;color:#065f46;border-radius:20px;padding:2px 10px;font-size:.75rem;}
+.revoked-badge{background:#fee2e2;color:#991b1b;border-radius:20px;padding:2px 10px;font-size:.75rem;}
+</style>
+</head>
+<body>
+<div class="d-flex">
+  <div class="sidebar" style="width:240px;min-width:240px">
+    <div class="text-center mb-4">
+      <i class="fas fa-hospital fa-2x mb-2"></i>
+      <div class="fw-bold">Hospital Admin</div>
+      <small style="color:rgba(255,255,255,.5)">Trusted Authority</small>
+    </div>
+    <a href="/ha/dashboard"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a>
+    <a href="/ha/revoke" class="active"><i class="fas fa-ban me-2"></i>Revoke</a>
+    <a href="/ha/modify"><i class="fas fa-edit me-2"></i>Modify</a>
+    <a href="/registry"><i class="fas fa-users me-2"></i>User Registry</a>
+    <a href="/evidence_chain"><i class="fas fa-link me-2"></i>Evidence Chain</a>
+    <a href="/audit_log"><i class="fas fa-history me-2"></i>Audit Log</a>
+    <hr style="border-color:rgba(255,255,255,.2)">
+    <a href="/logout" style="color:#fca5a5;"><i class="fas fa-sign-out-alt me-2"></i>Logout</a>
+  </div>
+
+  <div class="flex-grow-1 p-4">
+    <h4 class="fw-bold mb-4"><i class="fas fa-ban text-danger me-2"></i>Revoke User</h4>
+
+    {% if msg %}
+    <div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>{{ msg }}</div>
+    {% endif %}
+    {% if error %}
+    <div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>{{ error }}</div>
+    {% endif %}
+
+    <div class="card p-4 mb-4">
+      <p class="text-muted small mb-4">
+        Revoking a user adds their pseudonym to the Evidence Chain and marks them inactive.
+        Their record is stored using a Chameleon Hash so evidence can be corrected later if needed.
+      </p>
+      <form method="POST" action="/ha/revoke" class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-bold">User Pseudonym ID</label>
+          <select class="form-select" name="pseudo_id">
+            {% for uid, u in users.items() %}
+            {% if not u.revoked %}
+            <option value="{{ uid }}">{{ uid[:34] }}... ({{ u.role }})</option>
+            {% endif %}
+            {% endfor %}
+          </select>
+          {% if not users or users.values() | selectattr('revoked', 'equalto', false) | list | length == 0 %}
+          <div class="form-text text-warning">No active users available to revoke.</div>
+          {% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold">Evidence / Reason</label>
+          <input type="text" class="form-control" name="evidence"
+                 placeholder="e.g. Unauthorised EHR access on 2025-01-15" required>
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn btn-danger fw-bold">
+            <i class="fas fa-ban me-2"></i>Revoke User & Add to Evidence Chain
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Revoked users list -->
+    {% if revoked_list %}
+    <div class="card p-4">
+      <h5 class="fw-bold mb-3"><i class="fas fa-list text-danger me-2"></i>Revoked Users</h5>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr><th>Pseudonym</th><th>Role</th><th>Evidence</th></tr>
+          </thead>
+          <tbody>
+          {% for e in revoked_list %}
+          <tr>
+            <td><small class="font-monospace">{{ e.pseudo_id[:26] }}...</small></td>
+            <td><span class="revoked-badge"><i class="fas fa-ban me-1"></i>Revoked</span></td>
+            <td><small class="text-muted">{{ e.cred_i }}</small></td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Launcher switch button -->
+<a href="http://localhost:5000" title="Back to Mode Selector"
+   style="position:fixed;bottom:24px;right:24px;z-index:9999;
+          background:#0f2027;color:#fff;border-radius:50px;
+          padding:10px 18px;font-size:.82rem;font-weight:600;
+          text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.4);
+          display:flex;align-items:center;gap:8px;transition:.2s;"
+   onmouseover="this.style.background='#065f46'"
+   onmouseout="this.style.background='#0f2027'">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  Switch Mode
+</a>
+</body></html>

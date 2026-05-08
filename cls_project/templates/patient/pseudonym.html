@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Pseudonym Management{% endblock %}
+{% block content %}
+<h3 class="mb-4"><i class="bi bi-incognito text-info"></i> Pseudonym (RID) Management</h3>
+
+<div class="card border-info mb-4">
+  <div class="card-header bg-info text-white">Current Pseudonym</div>
+  <div class="card-body">
+    {% if rid %}
+      <p class="mb-1 fw-bold">RID:</p>
+      <code class="fs-5 text-break d-block mb-3">{{ rid }}</code>
+      {% if rid_info %}
+        <table class="table table-sm table-borderless">
+          <tr><th>Status</th><td>{% if rid_info.active and not rid_info.revoked %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-danger">Inactive</span>{% endif %}</td></tr>
+          <tr><th>Valid From</th><td>{{ rid_info.validity_start }}</td></tr>
+          <tr><th>Expires</th><td>{{ rid_info.validity_expiry }}</td></tr>
+          {% if rid_info.revoked %}<tr><th>Revoke Reason</th><td class="text-danger">{{ rid_info.revoke_reason }}</td></tr>{% endif %}
+        </table>
+      {% endif %}
+      <form method="POST" action="{{ url_for('patient.rotate_pseudonym') }}">
+        <button class="btn btn-info text-white" onclick="return confirm('Generate a new pseudonym? The old one will become inactive.')">
+          <i class="bi bi-arrow-repeat"></i> Rotate Pseudonym
+        </button>
+      </form>
+    {% else %}
+      <div class="alert alert-warning">No active pseudonym found.</div>
+      <form method="POST" action="{{ url_for('patient.rotate_pseudonym') }}">
+        <button class="btn btn-info text-white">Generate Pseudonym</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="alert alert-light border small">
+  <strong>What is a pseudonym (RID)?</strong><br>
+  RID = SHA-256("CLS_RID|" || real_id || "|" || V<sub>i</sub>)<br>
+  Your real identity is never revealed in signatures. Only the KGC can trace a RID back to your real identity on legal authority.
+  After the validity period expires, the RID becomes invalid and your records are unlinkable to any new pseudonym you generate.
+</div>
+{% endblock %}

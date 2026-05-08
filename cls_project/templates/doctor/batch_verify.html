@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Batch Verify Signatures{% endblock %}
+{% block content %}
+<h3 class="mb-4"><i class="bi bi-check2-all text-success"></i> Batch Signature Verification</h3>
+<p class="text-muted">Efficiently verify multiple CLS signatures at once — designed for IoT telemetry scenarios where many devices sign sensor readings.</p>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-header"><i class="bi bi-info-circle"></i> Batch Verify Algorithm</div>
+  <div class="card-body small text-muted">
+    <p>Choose random weights r<sub>i</sub> ← Z*q, then verify:</p>
+    <code>(Σ r<sub>i</sub>·σ<sub>i</sub>) · P = Σ r<sub>i</sub> · (T<sub>i</sub> + h1<sub>i</sub> · (R<sub>i</sub> + H₁(RID<sub>i</sub>,R<sub>i</sub>)·P_pub + h2<sub>i</sub>·PK<sub>i</sub>))</code>
+    <p class="mt-2 mb-0">LHS uses a <strong>single scalar multiplication</strong> regardless of batch size. On failure, individual verification isolates bad signatures.</p>
+  </div>
+</div>
+
+<form method="POST" enctype="multipart/form-data">
+  <div class="mb-3">
+    <label class="form-label fw-bold">Upload JSON file or paste JSON array below</label>
+    <input type="file" name="json_file" class="form-control mb-2" accept=".json">
+    <textarea name="json_data" class="form-control font-monospace" rows="10"
+      placeholder='[{"identity":"RID","pk_record":{"PK":"hex","R":"hex"},"message":"string","signature":{"T":"hex","sigma":123}},...]'></textarea>
+  </div>
+  <button type="submit" class="btn btn-success"><i class="bi bi-check2-all"></i> Run Batch Verify</button>
+</form>
+{% endblock %}

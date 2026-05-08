@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Doctor Dashboard{% endblock %}
+{% block content %}
+<h2 class="mb-1"><i class="bi bi-person-badge-fill text-success"></i> Welcome, Dr. {{ username }}</h2>
+<p class="text-muted mb-4">Verify patient records with CLS signature validation and batch-verify IoT telemetry.</p>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <a href="{{ url_for('doctor.records_search') }}" class="btn btn-success w-100 py-3">
+      <i class="bi bi-search fs-3 d-block mb-1"></i> Find Patient Records
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{{ url_for('doctor.batch_verify_view') }}" class="btn btn-outline-success w-100 py-3">
+      <i class="bi bi-check2-all fs-3 d-block mb-1"></i> Batch Verify Signatures
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{{ url_for('kgc.system_params') }}" class="btn btn-outline-secondary w-100 py-3">
+      <i class="bi bi-cpu fs-3 d-block mb-1"></i> System Parameters
+    </a>
+  </div>
+</div>
+
+<h5 class="mb-3"><i class="bi bi-clock-history"></i> Recent Records</h5>
+{% if recent_records %}
+<table class="table table-hover table-bordered">
+  <thead class="table-success"><tr><th>ID</th><th>Type</th><th>RID</th><th>Signed At</th></tr></thead>
+  <tbody>
+    {% for rec in recent_records %}
+    <tr>
+      <td>{{ rec.id }}</td>
+      <td><span class="badge bg-secondary">{{ rec.data_type }}</span></td>
+      <td>
+        <a href="{{ url_for('doctor.view_records', rid=rec.RID) }}">
+          <code class="small">{{ rec.RID[:16] }}…</code>
+        </a>
+      </td>
+      <td class="small">{{ rec.signed_at.strftime('%Y-%m-%d %H:%M') }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="alert alert-light text-muted">No records found yet.</div>
+{% endif %}
+
+{% if batch_logs %}
+<h5 class="mt-4 mb-3"><i class="bi bi-check2-all"></i> Recent Batch Verifications</h5>
+<table class="table table-sm table-bordered">
+  <thead class="table-light"><tr><th>Date</th><th>Total</th><th>Passed</th><th>Failed</th><th>Result</th></tr></thead>
+  <tbody>
+    {% for log in batch_logs %}
+    <tr>
+      <td class="small">{{ log.submitted_at.strftime('%Y-%m-%d %H:%M') }}</td>
+      <td>{{ log.item_count }}</td>
+      <td class="text-success">{{ log.passed }}</td>
+      <td class="text-danger">{{ log.failed }}</td>
+      <td>{% if log.all_valid %}<span class="badge bg-success">All Valid</span>{% else %}<span class="badge bg-danger">{{ log.failed }} Failed</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

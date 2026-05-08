@@ -1,0 +1,4 @@
+B. K. Meher, R. Amin, M. Abdussami, V. Sureshkumar, and Md.
+A. Hossain, “Efficient certificateless anonymous mutual authentication
+in WBANs for smart healthcare,” IEEE Transactions on Intelligent
+Transportation Systems, vol. 25, no. 11, pp. 17666–17675, Nov. 2024.

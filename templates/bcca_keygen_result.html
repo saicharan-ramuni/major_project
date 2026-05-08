@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Keys Generated — Healthcare BCCA</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>body{background:#f0f4f8;} .card{border:none;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.1);}
+.code-box{background:#1e1e2e;color:#cdd6f4;border-radius:8px;padding:14px;font-family:monospace;font-size:.8rem;word-break:break-all;}
+.badge-pre{background:#d1fae5;color:#065f46;border-radius:6px;padding:2px 8px;font-size:.75rem;}</style>
+</head>
+<body>
+<nav class="navbar navbar-dark" style="background:#0d4f8c">
+  <div class="container"><a class="navbar-brand fw-bold" href="/"><i class="fas fa-heartbeat me-2"></i>Healthcare BCCA</a></div>
+</nav>
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-9">
+      <div class="card p-5">
+        <div class="text-center mb-4">
+          <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+          <h3 class="fw-bold">Algorithm 4 Complete — Keys Generated</h3>
+          <p class="text-muted">Partial key verified. Precomputed sets ready. Role: <strong>{{ role }}</strong></p>
+        </div>
+
+        <div class="alert alert-success">
+          <i class="fas fa-shield-alt me-2"></i>
+          <strong>psk_i · G == gpk_i + h₁_i · P_pub</strong> — Partial key verification <span class="badge bg-success">PASSED ✓</span>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <div class="card p-3 border-primary">
+              <h6 class="fw-bold text-primary"><i class="fas fa-lock me-2"></i>Private Key (sk_i)</h6>
+              <div class="code-box">
+                <div><span style="color:#f9e2af">x_i:</span> {{ keys.x_i[:20] }}...</div>
+                <div><span style="color:#f9e2af">psk_i:</span> {{ keys.psk_i[:20] }}...</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card p-3 border-success">
+              <h6 class="fw-bold text-success"><i class="fas fa-unlock me-2"></i>Public Key (pk_i)</h6>
+              <div class="code-box">
+                <div><span style="color:#a6e3a1">upk_i:</span> {{ keys.upk_i[:30] }}...</div>
+                <div><span style="color:#a6e3a1">gpk_i:</span> {{ keys.gpk_i[:30] }}...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-3 mb-3 border-warning">
+          <h6 class="fw-bold"><span class="badge-pre me-2">Precomputed</span>SID / KID Sets (Algorithm 4.2)</h6>
+          <p class="text-muted small">{{ keys.SID|length }} pairs ready. SID_{i,j} = (v_j·x_i + H₁(RID,α)) mod q | KID_{i,j} = SID_{i,j}·G</p>
+          <div class="code-box" style="max-height:80px;overflow:hidden">
+            <div>SID[0]: {{ keys.SID[0][:25] }}...</div>
+            <div>KID[0]: {{ keys.KID[0][:30] }}...</div>
+            <div style="color:#6c7086">... ({{ keys.SID|length - 1 }} more pairs)</div>
+          </div>
+        </div>
+
+        {% if role == 'PATIENT' %}
+        <div class="card p-3 mb-4 border-info">
+          <h6 class="fw-bold"><span class="badge-pre me-2">Precomputed</span>Encryption Sets Q / ek (Algorithm 4.3)</h6>
+          <p class="text-muted small">{{ keys.Q|length }} pairs. Q_{i,j} = q_j·G | ek_{i,j} = H₁(q_j·dpk)</p>
+          <div class="code-box" style="max-height:60px;overflow:hidden">
+            <div>Q[0]: {{ keys.Q[0][:30] }}...</div>
+            <div>ek[0]: {{ keys.ek[0][:25] }}...</div>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="d-flex gap-3">
+          <a href="/login" class="btn btn-primary flex-fill fw-bold">
+            <i class="fas fa-sign-in-alt me-2"></i>Proceed to Login
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Launcher switch button -->
+<a href="http://localhost:5000" title="Back to Mode Selector"
+   style="position:fixed;bottom:24px;right:24px;z-index:9999;
+          background:#0f2027;color:#fff;border-radius:50px;
+          padding:10px 18px;font-size:.82rem;font-weight:600;
+          text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.4);
+          display:flex;align-items:center;gap:8px;transition:.2s;"
+   onmouseover="this.style.background='#065f46'"
+   onmouseout="this.style.background='#0f2027'">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  Switch Mode
+</a>
+</body></html>

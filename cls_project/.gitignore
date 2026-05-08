@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env
+
+# Flask / SQLite database
+instance/cls_healthcare.db
+*.db
+*.sqlite3
+
+# CLS params file — contains KGC master secret key (msk)
+# IMPORTANT: never commit this; each deployment generates its own
+instance/cls_params.json
+
+# Secrets / environment
+.env
+*.secret
+
+# IDE / OS
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# Test / coverage artifacts
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Jupyter
+.ipynb_checkpoints/

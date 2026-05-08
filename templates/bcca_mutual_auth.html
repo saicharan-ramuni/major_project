@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mutual Authentication — Healthcare BCCA</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>body{background:#f0f4f8;} .card{border:none;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.1);}
+.step-active{background:#1a6fc4;color:#fff;border-radius:50%;width:32px;height:32px;
+  display:inline-flex;align-items:center;justify-content:center;font-weight:700;}
+.step-done{background:#22c55e;color:#fff;border-radius:50%;width:32px;height:32px;
+  display:inline-flex;align-items:center;justify-content:center;}
+.step-pending{background:#e5e7eb;color:#6b7280;border-radius:50%;width:32px;height:32px;
+  display:inline-flex;align-items:center;justify-content:center;}
+.code-box{background:#1e1e2e;color:#cdd6f4;border-radius:8px;padding:12px;
+          font-family:monospace;font-size:.75rem;word-break:break-all;max-height:140px;overflow:auto;}
+</style>
+</head>
+<body>
+<nav class="navbar navbar-dark" style="background:#0d4f8c">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/patient/dashboard"><i class="fas fa-heartbeat me-2"></i>Patient Portal</a>
+    <a href="/patient/dashboard" class="btn btn-outline-light btn-sm">Dashboard</a>
+  </div>
+</nav>
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-9">
+      <h4 class="fw-bold mb-4 text-center">
+        <i class="fas fa-handshake text-primary me-2"></i>Algorithm 8: Mutual Patient–Doctor Authentication
+      </h4>
+
+      <!-- Progress steps -->
+      <div class="d-flex justify-content-center align-items-center gap-3 mb-5">
+        <div class="text-center">
+          <div class="{% if step in ['request','sent','complete'] %}step-done{% else %}step-pending{% endif %} mx-auto">1</div>
+          <small class="text-muted d-block mt-1">Patient Request</small>
+        </div>
+        <div style="height:2px;background:#e5e7eb;flex:1"></div>
+        <div class="text-center">
+          <div class="{% if step in ['sent','complete'] %}step-done{% elif step == 'doctor' %}step-active{% else %}step-pending{% endif %} mx-auto">2</div>
+          <small class="text-muted d-block mt-1">Doctor Verify</small>
+        </div>
+        <div style="height:2px;background:#e5e7eb;flex:1"></div>
+        <div class="text-center">
+          <div class="{% if step == 'complete' %}step-done{% else %}step-pending{% endif %} mx-auto">3</div>
+          <small class="text-muted d-block mt-1">Session Key</small>
+        </div>
+      </div>
+
+      {% if error %}
+      <div class="alert alert-danger mb-4"><i class="fas fa-exclamation-circle me-2"></i>{{ error }}</div>
+      {% endif %}
+
+      {% if step == 'complete' %}
+      <!-- Step 4: Session key established -->
+      <div class="card p-5 text-center">
+        <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+        <h5 class="fw-bold">Mutual Authentication Complete!</h5>
+        <p class="text-muted">Both patient and doctor have verified each other's identity and role.</p>
+        <div class="alert alert-success">
+          <strong>Doctor authenticated:</strong> {{ doctor_id }}...<br>
+          <strong>Session key K_ab:</strong> <code>{{ session_key }}...</code> (AES-256-GCM ready)
+        </div>
+        <div class="alert alert-info text-start small">
+          K_ab = H₅(ID_a, ID_b, z_a·Z_b) = H₅(ID_a, ID_b, z_b·Z_a) ✓ (ECDH)<br>
+          All subsequent EHR communication encrypted with K_ab via AES-256-GCM.
+        </div>
+        <a href="/patient/upload_ehr" class="btn btn-primary mt-2">
+          <i class="fas fa-file-upload me-2"></i>Upload EHR Now
+        </a>
+      </div>
+
+      {% elif step == 'sent' %}
+      <!-- Auth request sent, waiting for finalize -->
+      <div class="card p-5">
+        <h5 class="fw-bold mb-3"><i class="fas fa-paper-plane text-primary me-2"></i>Step 1 Complete — Auth Request Sent</h5>
+        <div class="alert alert-success">
+          Auth request sent to doctor <strong>{{ doctor_id }}...</strong><br>
+          W_a = SID^a_k · (upk_b + gpk_b + h^b₁ · P_pub) computed.
+        </div>
+        <div class="mb-3">
+          <h6 class="fw-bold">Auth Request (C_a, σ_a) — copy and send to doctor</h6>
+          <div class="code-box">{{ auth_req | tojson(indent=2) }}</div>
+        </div>
+        <hr>
+        <h5 class="fw-bold mb-3"><i class="fas fa-reply text-success me-2"></i>Step 3 — Paste Doctor's Response</h5>
+        <form method="POST" action="/auth/patient_finalize">
+          <div class="mb-3">
+            <label class="form-label fw-bold">Doctor's Auth Response (JSON)</label>
+            <textarea class="form-control font-monospace" name="auth_response" rows="6"
+                      placeholder='{"Z_b":"04...","C_b":"...","sigma_b":"...","KID_b_k":"04...","Time_b":"...",}'></textarea>
+          </div>
+          <button type="submit" class="btn btn-success w-100 fw-bold">
+            <i class="fas fa-check me-2"></i>Verify Doctor & Establish Session Key
+          </button>
+        </form>
+      </div>
+
+      {% else %}
+      <!-- Step 1: Patient sends auth request -->
+      <div class="card p-5">
+        <h5 class="fw-bold mb-3"><i class="fas fa-user-injured text-primary me-2"></i>Step 1 — Select Doctor & Send Auth Request</h5>
+        <div class="alert alert-info small mb-4">
+          Patient computes W_a = SID^a_k · (upk_b + gpk_b + h^b₁·P_pub), encrypts to C_a,
+          signs σ_a and sends to cloud server. Doctor verifies Role_a = PATIENT.
+        </div>
+        <form method="POST">
+          <div class="mb-4">
+            <label class="form-label fw-bold">Select Doctor</label>
+            <select class="form-select" name="doctor_pseudo_id" required>
+              <option value="">-- Select a registered doctor --</option>
+              {% for uid, u in users.items() %}
+              {% if u.role == 'DOCTOR' and not u.revoked %}
+              <option value="{{ uid }}">{{ uid[:30] }}... (Doctor)</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 fw-bold">
+            <i class="fas fa-paper-plane me-2"></i>Send Authentication Request to Doctor
+          </button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Launcher switch button -->
+<a href="http://localhost:5000" title="Back to Mode Selector"
+   style="position:fixed;bottom:24px;right:24px;z-index:9999;
+          background:#0f2027;color:#fff;border-radius:50px;
+          padding:10px 18px;font-size:.82rem;font-weight:600;
+          text-decoration:none;box-shadow:0 4px 16px rgba(0,0,0,.4);
+          display:flex;align-items:center;gap:8px;transition:.2s;"
+   onmouseover="this.style.background='#065f46'"
+   onmouseout="this.style.background='#0f2027'">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  Switch Mode
+</a>
+</body></html>

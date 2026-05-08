@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}KGC — Revocation List{% endblock %}
+{% block content %}
+<h3 class="mb-4"><i class="bi bi-slash-circle text-danger"></i> Pseudonym Revocation List</h3>
+
+{% if revoked %}
+<table class="table table-bordered table-hover">
+  <thead class="table-danger"><tr><th>RID</th><th>Reason</th><th>Expired</th></tr></thead>
+  <tbody>
+    {% for r in revoked %}
+    <tr>
+      <td><code>{{ r.RID }}</code></td>
+      <td>{{ r.reason or '—' }}</td>
+      <td>{{ r.validity_expiry }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="alert alert-info">No pseudonyms have been revoked.</div>
+{% endif %}
+
+<h5 class="mt-4">Revoke a Pseudonym</h5>
+<div class="card">
+  <div class="card-body">
+    <form method="POST" id="revokeForm">
+      <div class="row g-2">
+        <div class="col-md-6">
+          <input type="text" id="revokeRid" class="form-control font-monospace" placeholder="RID to revoke (32 hex chars)" maxlength="32">
+        </div>
+        <div class="col-md-4">
+          <input type="text" id="revokeReason" class="form-control" placeholder="Reason (e.g. legal order)">
+        </div>
+        <div class="col-md-2">
+          <button type="button" class="btn btn-danger w-100" onclick="submitRevoke()">Revoke</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function submitRevoke() {
+  const rid = document.getElementById('revokeRid').value.trim();
+  const reason = document.getElementById('revokeReason').value.trim();
+  if (!rid) { alert('Enter a RID.'); return; }
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '/kgc/revoke/' + encodeURIComponent(rid);
+  const r = document.createElement('input');
+  r.type = 'hidden'; r.name = 'reason'; r.value = reason;
+  form.appendChild(r);
+  document.body.appendChild(form);
+  form.submit();
+}
+</script>
+{% endblock %}

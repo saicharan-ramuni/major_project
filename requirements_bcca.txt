@@ -1,0 +1,15 @@
+# Healthcare BCCA — Python Dependencies
+# Install with: pip install -r requirements_bcca.txt
+
+# Core Flask
+flask>=2.3.0
+werkzeug>=2.3.0
+
+# Blockchain
+web3>=6.0.0
+
+# Cryptography (AES-256-GCM for pseudonym encryption, mutual auth payload)
+cryptography>=41.0.0
+
+# Existing project deps
+pickle-mixin; python_version < "3"

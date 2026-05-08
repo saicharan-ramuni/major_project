@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}KGC — Trace Identity{% endblock %}
+{% block content %}
+<h3 class="mb-4"><i class="bi bi-eye-fill text-warning"></i> Trace Pseudonym Identity</h3>
+<div class="alert alert-warning small"><i class="bi bi-exclamation-triangle-fill"></i> Every trace is logged with timestamp for accountability. Use only on legal authority.</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label fw-bold">Pseudonym RID to trace</label>
+        <input type="text" name="rid" class="form-control font-monospace" maxlength="32" placeholder="32-char hex RID" value="{{ rid_queried or '' }}" required>
+      </div>
+      <button type="submit" class="btn btn-warning">Reveal Real Identity</button>
+    </form>
+  </div>
+</div>
+
+{% if real_id %}
+<div class="alert alert-success"><strong>Trace result:</strong> RID <code>{{ rid_queried }}</code> → <strong>{{ real_id }}</strong></div>
+{% endif %}
+
+<h5 class="mt-4">Trace Audit Log</h5>
+<table class="table table-sm table-bordered">
+  <thead class="table-secondary"><tr><th>Timestamp</th><th>RID</th><th>Success</th><th>Real ID</th></tr></thead>
+  <tbody>
+    {% for ev in trace_log %}
+    <tr>
+      <td>{{ ev.timestamp }}</td>
+      <td><code>{{ ev.rid }}</code></td>
+      <td>{% if ev.success %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-danger">No</span>{% endif %}</td>
+      <td>{{ ev.real_id or '—' }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4" class="text-center text-muted">No traces yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

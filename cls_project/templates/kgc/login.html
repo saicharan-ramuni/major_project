@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}KGC Login{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card shadow border-danger">
+      <div class="card-header bg-danger text-white text-center">
+        <h5 class="mb-0"><i class="bi bi-gear-fill"></i> KGC Admin Login</h5>
+      </div>
+      <div class="card-body p-4">
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" class="form-control" required autofocus>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-danger w-100">Login as KGC Admin</button>
+        </form>
+        <div class="mt-3 text-center small text-muted">
+          First time? <a href="{{ url_for('kgc.setup') }}">Create KGC admin account</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

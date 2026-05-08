@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}KGC Dashboard{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-gear-fill text-danger"></i> KGC Dashboard</h2>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card border-primary text-center p-3">
+      <div class="fs-1 text-primary">{{ patient_count }}</div>
+      <div class="text-muted small">Patients</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-success text-center p-3">
+      <div class="fs-1 text-success">{{ doctor_count }}</div>
+      <div class="text-muted small">Doctors</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-info text-center p-3">
+      <div class="fs-1 text-info">{{ active_pseudonyms }}</div>
+      <div class="text-muted small">Active Pseudonyms</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-danger text-center p-3">
+      <div class="fs-1 text-danger">{{ revoked_count }}</div>
+      <div class="text-muted small">Revoked RIDs</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <a href="{{ url_for('kgc.auth_sessions') }}" class="text-decoration-none">
+      <div class="card border-success text-center p-3">
+        <div class="fs-1 text-success">{{ auth_session_count }}</div>
+        <div class="text-muted small">Auth Sessions</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header"><i class="bi bi-cpu"></i> System Parameters (Public)</div>
+  <div class="card-body">
+    <table class="table table-sm table-borderless">
+      <tr><th style="width:160px">Curve</th><td><code>{{ curve }}</code></td></tr>
+      <tr><th>P_pub (KGC master public key)</th>
+          <td><code class="text-break small">{{ P_pub_hex }}</code></td></tr>
+      <tr><th>H1</th><td><code>SHA-256("CLS_H1|" || P_pub || ID || R)</code></td></tr>
+      <tr><th>H2</th><td><code>SHA-256("CLS_H2|" || P_pub || ID || PK || m || T)</code></td></tr>
+      <tr><th>H3</th><td><code>SHA-256("CLS_H3|" || P_pub || ID || PK || m || T || h2)  [chained on h2]</code></td></tr>
+      <tr><th>H4</th><td><code>SHA-256("CLS_H4|" || P_pub || ID || m || PK || T)</code></td></tr>
+      <tr><th>Sign formula</th><td><code>σ = k + h₃·(d + x·h₂) + h₄·x  mod q</code></td></tr>
+      <tr><th>Verify equation</th><td><code>σ·P = T + h₃·(R + H₁(P_pub,ID,R)·P_pub + h₂·PK) + h₄·PK</code></td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-4">
+    <a href="{{ url_for('kgc.users') }}" class="btn btn-outline-primary w-100 py-3">
+      <i class="bi bi-people-fill fs-3 d-block mb-1"></i> Manage Users & Issue Keys
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{{ url_for('kgc.trace_identity') }}" class="btn btn-outline-warning w-100 py-3">
+      <i class="bi bi-eye-fill fs-3 d-block mb-1"></i> Trace Pseudonym Identity
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{{ url_for('kgc.audit_log') }}" class="btn btn-outline-secondary w-100 py-3">
+      <i class="bi bi-journal-text fs-3 d-block mb-1"></i> View Audit Log
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{{ url_for('kgc.auth_sessions') }}" class="btn btn-outline-success w-100 py-3">
+      <i class="bi bi-shield-lock-fill fs-3 d-block mb-1"></i> Auth Sessions
+    </a>
+  </div>
+</div>
+{% endblock %}
