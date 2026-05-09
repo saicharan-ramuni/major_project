@@ -5,7 +5,16 @@
 
 <h5 class="text-primary">Patients</h5>
 <table class="table table-hover table-bordered mb-4">
-  <thead class="table-primary"><tr><th>ID</th><th>Username</th><th>Email</th><th>Registered</th><th>Has Key?</th><th>Action</th></tr></thead>
+  <thead class="table-primary">
+    <tr>
+      <th>ID</th>
+      <th>Username</th>
+      <th>Email</th>
+      <th>Registered</th>
+      <th>Pseudonym (RID)</th>
+      <th>Has Key?</th>
+    </tr>
+  </thead>
   <tbody>
     {% for u in patients %}
     <tr>
@@ -13,12 +22,25 @@
       <td>{{ u.username }}</td>
       <td>{{ u.email or '—' }}</td>
       <td>{{ u.created_at.strftime('%Y-%m-%d') }}</td>
-      <td>{% if u.cls_key %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</td>
       <td>
-        <form method="POST" action="{{ url_for('kgc.issue_key', user_id=u.id) }}" style="display:inline">
-          <button class="btn btn-sm btn-outline-primary">Re-issue Key</button>
-        </form>
+        {% if pseudo_map.get(u.id) %}
+          <div class="input-group input-group-sm" style="min-width:260px;">
+            <input type="text" class="form-control form-control-sm font-monospace"
+                   value="{{ pseudo_map[u.id] }}"
+                   id="pseudo_{{ u.id }}"
+                   readonly
+                   style="font-size:.7rem;background:#f8f9ff;color:#1d4ed8;">
+            <button class="btn btn-sm btn-outline-primary"
+                    onclick="copyPseudo('pseudo_{{ u.id }}')"
+                    title="Copy full pseudonym">
+              <i class="bi bi-clipboard"></i>
+            </button>
+          </div>
+        {% else %}
+          <span class="text-muted small">—</span>
+        {% endif %}
       </td>
+      <td>{% if u.cls_key %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</td>
     </tr>
     {% else %}
     <tr><td colspan="6" class="text-center text-muted">No patients registered yet.</td></tr>
@@ -28,7 +50,16 @@
 
 <h5 class="text-success">Doctors</h5>
 <table class="table table-hover table-bordered">
-  <thead class="table-success"><tr><th>ID</th><th>Username</th><th>Email</th><th>Registered</th><th>Has Key?</th><th>Action</th></tr></thead>
+  <thead class="table-success">
+    <tr>
+      <th>ID</th>
+      <th>Username</th>
+      <th>Email</th>
+      <th>Registered</th>
+      <th>Pseudonym (RID)</th>
+      <th>Has Key?</th>
+    </tr>
+  </thead>
   <tbody>
     {% for u in doctors %}
     <tr>
@@ -36,16 +67,50 @@
       <td>{{ u.username }}</td>
       <td>{{ u.email or '—' }}</td>
       <td>{{ u.created_at.strftime('%Y-%m-%d') }}</td>
-      <td>{% if u.cls_key %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</td>
       <td>
-        <form method="POST" action="{{ url_for('kgc.issue_key', user_id=u.id) }}" style="display:inline">
-          <button class="btn btn-sm btn-outline-success">Re-issue Key</button>
-        </form>
+        {% if pseudo_map.get(u.id) %}
+          <div class="input-group input-group-sm" style="min-width:260px;">
+            <input type="text" class="form-control form-control-sm font-monospace"
+                   value="{{ pseudo_map[u.id] }}"
+                   id="pseudo_{{ u.id }}"
+                   readonly
+                   style="font-size:.7rem;background:#f6fff8;color:#065f46;">
+            <button class="btn btn-sm btn-outline-success"
+                    onclick="copyPseudo('pseudo_{{ u.id }}')"
+                    title="Copy full pseudonym">
+              <i class="bi bi-clipboard"></i>
+            </button>
+          </div>
+        {% else %}
+          <span class="text-muted small">—</span>
+        {% endif %}
       </td>
+      <td>{% if u.cls_key %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}</td>
     </tr>
     {% else %}
     <tr><td colspan="6" class="text-center text-muted">No doctors registered yet.</td></tr>
     {% endfor %}
   </tbody>
 </table>
+
+<script>
+function copyPseudo(inputId) {
+  const input = document.getElementById(inputId);
+  input.select();
+  input.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(input.value).then(function() {
+    // briefly change button icon to show success
+    const btn = input.nextElementSibling;
+    const origHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-clipboard-check"></i>';
+    btn.classList.replace('btn-outline-primary', 'btn-success');
+    btn.classList.replace('btn-outline-success', 'btn-success');
+    setTimeout(function() {
+      btn.innerHTML = origHTML;
+      btn.classList.replace('btn-success', 'btn-outline-primary');
+      btn.classList.replace('btn-success', 'btn-outline-success');
+    }, 1500);
+  });
+}
+</script>
 {% endblock %}

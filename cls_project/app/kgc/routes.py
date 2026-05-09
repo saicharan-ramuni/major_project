@@ -149,7 +149,15 @@ def users():
         return guard
     patients = User.query.filter_by(role="patient").all()
     doctors  = User.query.filter_by(role="doctor").all()
-    return render_template("kgc/users.html", patients=patients, doctors=doctors)
+
+    # Build user_id → active pseudonym RID mapping
+    pseudo_map = {}
+    for p in Pseudonym.query.filter_by(active=True).all():
+        pseudo_map[p.user_id] = p.RID
+
+    return render_template("kgc/users.html",
+                           patients=patients, doctors=doctors,
+                           pseudo_map=pseudo_map)
 
 
 # ---------------------------------------------------------------------------
