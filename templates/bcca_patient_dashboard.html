@@ -29,7 +29,6 @@ body{background:#f0f4f8;}
     <a href="/patient/dashboard" class="active"><i class="fas fa-home me-2"></i>Dashboard</a>
     <a href="/patient/upload_ehr"><i class="fas fa-file-upload me-2"></i>Upload EHR</a>
     <a href="/auth/patient_request"><i class="fas fa-handshake me-2"></i>Auth with Doctor</a>
-    <a href="/registry"><i class="fas fa-users me-2"></i>User Registry</a>
     <a href="/audit_log"><i class="fas fa-history me-2"></i>Audit Log</a>
     <hr style="border-color:rgba(255,255,255,.2)">
     <a href="/logout" class="text-danger"><i class="fas fa-sign-out-alt me-2"></i>Logout</a>
@@ -113,16 +112,6 @@ body{background:#f0f4f8;}
         <p>No EHR records yet. <a href="/patient/upload_ehr">Upload your first EHR</a>.</p>
       </div>
       {% endif %}
-    </div>
-
-    <!-- Algorithm reminder -->
-    <div class="card p-3 mt-3 border-info">
-      <small class="text-muted">
-        <i class="fas fa-bolt text-warning me-2"></i>
-        <strong>Algorithm 6 efficiency:</strong> EHR signing uses
-        <strong>0 EC multiplications</strong> on your device — all values are precomputed.
-        Your wearable sensor battery is preserved.
-      </small>
     </div>
   </div>
 </div>

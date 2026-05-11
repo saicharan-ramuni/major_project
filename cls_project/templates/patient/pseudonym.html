@@ -30,11 +30,4 @@
     {% endif %}
   </div>
 </div>
-
-<div class="alert alert-light border small">
-  <strong>What is a pseudonym (RID)?</strong><br>
-  RID = SHA-256("CLS_RID|" || real_id || "|" || V<sub>i</sub>)<br>
-  Your real identity is never revealed in signatures. Only the KGC can trace a RID back to your real identity on legal authority.
-  After the validity period expires, the RID becomes invalid and your records are unlinkable to any new pseudonym you generate.
-</div>
 {% endblock %}

@@ -62,19 +62,23 @@ _PENDING_PARTIAL: Dict[str, dict] = {}
 # RID → pseudo_id mapping for login without pseudonym (one-step registration)
 _RID_TO_PSEUDO: Dict[str, str] = {}
 
+# Mutual auth sessions: session_id → {session_id, patient_id, doctor_id, timestamp}
+_AUTH_SESSIONS: Dict[str, dict] = {}
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Persistent store helpers  (survive server restart)
 # ──────────────────────────────────────────────────────────────────────────────
 
-_DATA_DIR       = "bcca_data"
-_RID_MAP_FILE   = os.path.join(_DATA_DIR, "rid_map.json")
-_KEY_STORE_FILE = os.path.join(_DATA_DIR, "key_store.json")
+_DATA_DIR            = "bcca_data"
+_RID_MAP_FILE        = os.path.join(_DATA_DIR, "rid_map.json")
+_KEY_STORE_FILE      = os.path.join(_DATA_DIR, "key_store.json")
+_AUTH_SESSIONS_FILE  = os.path.join(_DATA_DIR, "auth_sessions.json")
 
 os.makedirs(_DATA_DIR, exist_ok=True)
 
 def _load_persistent_stores():
-    """Load RID→pseudo map and key store from disk on startup."""
-    global _RID_TO_PSEUDO, _KEY_STORE
+    """Load RID→pseudo map, key store, and auth sessions from disk on startup."""
+    global _RID_TO_PSEUDO, _KEY_STORE, _AUTH_SESSIONS
     if os.path.exists(_RID_MAP_FILE):
         try:
             with open(_RID_MAP_FILE, encoding="utf-8") as f:
@@ -87,13 +91,40 @@ def _load_persistent_stores():
                 _KEY_STORE = json.load(f)
         except Exception:
             pass
+    if os.path.exists(_AUTH_SESSIONS_FILE):
+        try:
+            with open(_AUTH_SESSIONS_FILE, encoding="utf-8") as f:
+                _AUTH_SESSIONS = json.load(f)
+        except Exception:
+            pass
 
 def _save_persistent_stores():
-    """Persist RID→pseudo map and key store to disk."""
+    """Persist RID→pseudo map, key store, and auth sessions to disk."""
     with open(_RID_MAP_FILE,   "w", encoding="utf-8") as f:
         json.dump(_RID_TO_PSEUDO, f)
     with open(_KEY_STORE_FILE, "w", encoding="utf-8") as f:
         json.dump(_KEY_STORE, f)
+    with open(_AUTH_SESSIONS_FILE, "w", encoding="utf-8") as f:
+        json.dump(_AUTH_SESSIONS, f)
+
+def _record_auth_session(doctor_id: str, patient_id: str):
+    """Record a successful mutual auth between doctor and patient."""
+    session_id = hashlib.sha256(f"{patient_id}|{doctor_id}".encode()).hexdigest()[:16]
+    if session_id not in _AUTH_SESSIONS:
+        _AUTH_SESSIONS[session_id] = {
+            "session_id" : session_id,
+            "patient_id" : patient_id,
+            "doctor_id"  : doctor_id,
+            "timestamp"  : int(time.time()),
+        }
+        with open(_AUTH_SESSIONS_FILE, "w", encoding="utf-8") as f:
+            json.dump(_AUTH_SESSIONS, f)
+
+def _patient_sessions(patient_id: str) -> list:
+    return [s for s in _AUTH_SESSIONS.values() if s["patient_id"] == patient_id]
+
+def _doctor_sessions(doctor_id: str) -> list:
+    return [s for s in _AUTH_SESSIONS.values() if s["doctor_id"] == doctor_id]
 
 # Load on import
 _load_persistent_stores()
@@ -439,6 +470,12 @@ def register():
             sa   = request.form["security_answer"]
             od   = request.form["other_details"]
 
+            # Duplicate check: reject if RID already registered
+            if rid in _RID_TO_PSEUDO:
+                raise ValueError("A user with this Real Identity (RID) and Date of Birth is already registered.")
+            if rid in _PENDING_REG or rid in _PENDING_PARTIAL:
+                raise ValueError("A registration for this Real Identity is already in progress.")
+
             # ── Algorithm 2: User key generation ──────────────────────────────
             reg_pkt, local = bcca_register(rid, pw, dob, sa, od, role)
 
@@ -663,6 +700,7 @@ def upload_ehr():
             ehr_msg["block_hash"]   = block_hash
             ehr_msg["verified"]     = True
             ehr_msg["ehr_preview"]  = vitals[:60] + ("..." if len(vitals) > 60 else "")
+            ehr_msg["session_id"]   = None   # normal upload: visible to all doctors
             _EHR_MSGS.append(ehr_msg)
             _append_audit(session["user_id"], "EHR_UPLOAD", "", "PATIENT")
 
@@ -682,9 +720,10 @@ def doctor_dashboard():
     keys = _require_role("DOCTOR")
     if keys is None:
         return redirect(url_for("login"))
-    # All EHR records visible to the doctor
+    # Show all normal EHRs (no session restriction) to all doctors
+    visible_ehrs = [m for m in _EHR_MSGS if not m.get("session_id")]
     return render_template("bcca_doctor_dashboard.html",
-                           keys=keys, ehrs=_EHR_MSGS)
+                           keys=keys, ehrs=visible_ehrs)
 
 @app.route("/doctor/decrypt_ehr", methods=["POST"])
 def doctor_decrypt_ehr():
@@ -694,11 +733,18 @@ def doctor_decrypt_ehr():
     try:
         c_i_hex = request.form["c_i"]
         Q_k_hex = request.form["Q_k"]
+        patient_pid = request.form.get("patient_pid", "")
+
+        # For session-tagged EHRs, only the authenticated doctor may decrypt
+        ehr_session_id = request.form.get("ehr_session_id", "")
+        if ehr_session_id:
+            sess = _AUTH_SESSIONS.get(ehr_session_id)
+            if not sess or sess["doctor_id"] != session["user_id"]:
+                raise ValueError("Access denied: this report is restricted to its authenticated doctor.")
+
         plaintext_bytes = decrypt_ehr(c_i_hex, Q_k_hex, keys)
         plaintext = plaintext_bytes.decode("utf-8")
         ehr_data  = json.loads(plaintext)
-
-        patient_pid = request.form.get("patient_pid", "")
         # Log access locally
         _append_audit(session["user_id"], "EHR_ACCESS", patient_pid, "DOCTOR")
 
@@ -756,13 +802,17 @@ def patient_auth_req():
             return render_template("bcca_mutual_auth.html",
                                    step="request", error=str(e))
     return render_template("bcca_mutual_auth.html", step="request",
-                           users=get_all_users())
+                           users=get_all_users(),
+                           patient_sessions=_patient_sessions(keys["ID_i"]))
 
-@app.route("/auth/doctor_verify", methods=["POST"])
+@app.route("/auth/doctor_verify", methods=["GET", "POST"])
 def doctor_auth_verify():
     keys = _require_role("DOCTOR")
     if keys is None:
         return redirect(url_for("login"))
+    if request.method == "GET":
+        return render_template("bcca_doctor_auth.html", error=None,
+                               doctor_sessions=_doctor_sessions(keys["ID_i"]))
     try:
         auth_req_json = request.form["auth_request"]
         auth_req = json.loads(auth_req_json)
@@ -784,12 +834,14 @@ def doctor_auth_verify():
         K_ab = doctor_compute_session_key(ephemeral_b, auth_req)
         session["session_key_b64"] = base64.b64encode(K_ab).decode()
 
+        # Record mutual auth session: this doctor is now authorised to view this patient's EHRs
+        _record_auth_session(keys["ID_i"], auth_req["ID_a"])
+
         return render_template("bcca_mutual_auth_doctor.html",
                                auth_resp=auth_resp,
                                session_key=base64.b64encode(K_ab).decode()[:16] + "...")
     except Exception as e:
-        return render_template("bcca_doctor_dashboard.html",
-                               keys=keys, ehrs=_EHR_MSGS, error=str(e))
+        return render_template("bcca_doctor_auth.html", error=str(e))
 
 @app.route("/auth/patient_finalize", methods=["POST"])
 def patient_auth_finalize():
@@ -809,6 +861,9 @@ def patient_auth_finalize():
         session.pop("ephemeral_a", None)
         session.pop("pending_auth_req", None)
 
+        # Record mutual auth session from patient side as well
+        _record_auth_session(auth_resp["ID_b"], session["user_id"])
+
         return render_template("bcca_mutual_auth.html",
                                step="complete",
                                session_key=base64.b64encode(K_ab).decode()[:16] + "...",
@@ -816,6 +871,73 @@ def patient_auth_finalize():
     except Exception as e:
         return render_template("bcca_mutual_auth.html",
                                step="finalize", error=str(e))
+
+# ──────────────────────────────────────────────────────────────────────────────
+# SESSION-BASED EHR UPLOAD & VIEW
+# ──────────────────────────────────────────────────────────────────────────────
+
+@app.route("/patient/session_upload/<session_id>", methods=["GET", "POST"])
+def patient_session_upload(session_id):
+    keys = _require_role("PATIENT")
+    if keys is None:
+        return redirect(url_for("login"))
+    sess = _AUTH_SESSIONS.get(session_id)
+    if not sess or sess["patient_id"] != session["user_id"]:
+        return render_template("bcca_upload_ehr.html", error="Invalid or unauthorised session.")
+    if request.method == "POST":
+        try:
+            vitals      = request.form.get("vitals", "")
+            notes       = request.form.get("notes", "")
+            report_file = request.files.get("report_file")
+
+            ehr_payload = {
+                "vitals"   : vitals,
+                "notes"    : notes,
+                "patient"  : session["user_id"],
+                "timestamp": int(time.time()),
+            }
+            if report_file and report_file.filename:
+                fname      = secure_filename(report_file.filename)
+                file_bytes = report_file.read()
+                ehr_payload["file_name"] = fname
+                ehr_payload["file_data"] = base64.b64encode(file_bytes).decode()
+
+            ehr_bytes = json.dumps(ehr_payload).encode("utf-8")
+            ehr_msg   = sign_ehr(ehr_bytes, keys)
+            _save_session_keys(keys)
+
+            valid, reason = verify_ehr(ehr_msg)
+            if not valid:
+                return render_template("bcca_session_upload.html", sess=sess,
+                                       error=f"Signature verification failed: {reason}")
+
+            block_hash = _blockchain_store_ehr(ehr_msg)
+            ehr_msg["block_hash"]   = block_hash
+            ehr_msg["verified"]     = True
+            ehr_msg["ehr_preview"]  = vitals[:60] + ("..." if len(vitals) > 60 else "")
+            ehr_msg["session_id"]   = session_id   # restrict to this session's doctor
+            _EHR_MSGS.append(ehr_msg)
+            _append_audit(session["user_id"], "SESSION_EHR_UPLOAD", sess["doctor_id"], "PATIENT")
+
+            return render_template("bcca_session_upload.html", sess=sess,
+                                   success=True, block_hash=block_hash)
+        except Exception as e:
+            return render_template("bcca_session_upload.html", sess=sess, error=str(e))
+    return render_template("bcca_session_upload.html", sess=sess)
+
+
+@app.route("/doctor/session_ehrs/<session_id>")
+def doctor_session_ehrs(session_id):
+    keys = _require_role("DOCTOR")
+    if keys is None:
+        return redirect(url_for("login"))
+    sess = _AUTH_SESSIONS.get(session_id)
+    if not sess or sess["doctor_id"] != session["user_id"]:
+        return render_template("bcca_doctor_dashboard.html", keys=keys,
+                               ehrs=[], error="Invalid or unauthorised session.")
+    session_ehrs = [m for m in _EHR_MSGS if m.get("session_id") == session_id]
+    return render_template("bcca_session_ehrs.html", keys=keys,
+                           sess=sess, ehrs=session_ehrs)
 
 # ──────────────────────────────────────────────────────────────────────────────
 # BATCH VERIFICATION API — Algorithm 7 Part C

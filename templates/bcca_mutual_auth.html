@@ -28,7 +28,7 @@
   <div class="row justify-content-center">
     <div class="col-md-9">
       <h4 class="fw-bold mb-4 text-center">
-        <i class="fas fa-handshake text-primary me-2"></i>Algorithm 8: Mutual Patient–Doctor Authentication
+        <i class="fas fa-handshake text-primary me-2"></i>Mutual Patient–Doctor Authentication
       </h4>
 
       <!-- Progress steps -->
@@ -102,10 +102,6 @@
       <!-- Step 1: Patient sends auth request -->
       <div class="card p-5">
         <h5 class="fw-bold mb-3"><i class="fas fa-user-injured text-primary me-2"></i>Step 1 — Select Doctor & Send Auth Request</h5>
-        <div class="alert alert-info small mb-4">
-          Patient computes W_a = SID^a_k · (upk_b + gpk_b + h^b₁·P_pub), encrypts to C_a,
-          signs σ_a and sends to cloud server. Doctor verifies Role_a = PATIENT.
-        </div>
         <form method="POST">
           <div class="mb-4">
             <label class="form-label fw-bold">Select Doctor</label>
@@ -123,6 +119,30 @@
           </button>
         </form>
       </div>
+
+      <!-- Authenticated Sessions -->
+      {% if patient_sessions %}
+      <div class="mt-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-shield-alt text-success me-2"></i>Your Authenticated Sessions</h5>
+        <div class="row g-3">
+          {% for s in patient_sessions %}
+          <div class="col-md-6">
+            <div class="card p-4 border-start border-success border-3">
+              <div class="mb-1 small text-muted fw-bold">Authenticated Doctor</div>
+              <code class="small d-block mb-3">{{ s.doctor_id[:32] }}...</code>
+              <div class="small text-muted mb-3">
+                <i class="fas fa-clock me-1"></i>Session established
+              </div>
+              <a href="/patient/session_upload/{{ s.session_id }}"
+                 class="btn btn-success btn-sm fw-bold w-100">
+                <i class="fas fa-file-upload me-1"></i>Upload Report for This Doctor
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
       {% endif %}
     </div>
   </div>

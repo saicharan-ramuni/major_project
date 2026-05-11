@@ -22,9 +22,6 @@
       </tr>
       <tr><th>Encryption</th><td><span class="badge bg-success">AES-256-GCM</span></td></tr>
     </table>
-    <div class="alert alert-success small mt-2">
-      <strong>Verification equation:</strong> σ·P = T + h₁·(R + H₁(RID, R)·P_pub + h₂·PK)
-    </div>
     <div class="mt-3">
       <a href="{{ url_for('patient.health_records') }}" class="btn btn-outline-success me-2">View All Records</a>
       <a href="{{ url_for('patient.upload_health_record') }}" class="btn btn-primary">Upload Another</a>

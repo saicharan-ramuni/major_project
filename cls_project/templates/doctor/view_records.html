@@ -52,15 +52,6 @@
         {% endif %}
       </td>
     </tr>
-    <tr class="table-light">
-      <td colspan="7">
-        <div class="small text-muted">
-          <strong>σ·P = T + h₃·(R + H₁(P_pub,ID,R)·P_pub + h₂·PK) + h₄·PK</strong> &nbsp;|&nbsp;
-          T: <code>{{ rec.T_hex[:24] }}…</code> &nbsp;|&nbsp;
-          σ: <code>{{ rec.sigma[:20] }}…</code>
-        </div>
-      </td>
-    </tr>
     {% endfor %}
   </tbody>
 </table>

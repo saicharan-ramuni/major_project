@@ -1,0 +1,8 @@
+bcca_data/*.json 
+.claude/ 
+__pycache__/ 
+*.pyc 
+instance/ 
+*.db 
+*.sqlite 
+*.sqlite3 
